@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+
+# Uploaded user files
+backend/uploads/
+
+# Environment
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Coverage
+coverage/
+
+# Docker
+docker-data/
+
+# Python
+venv/
+__pycache__/
+*.pyc
