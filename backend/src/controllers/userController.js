@@ -47,18 +47,46 @@ const updateProfile = async (req, res) => {
       });
     }
 
+    if (
+      (fullName !== undefined && typeof fullName !== "string") ||
+      (username !== undefined && typeof username !== "string") ||
+      (bio !== undefined && typeof bio !== "string")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid profile data",
+      });
+    }
+
+    const updateData = {};
+
+    if (fullName !== undefined) {
+      updateData.fullName = fullName.trim();
+    }
+
+    if (username !== undefined) {
+      updateData.username = username.trim();
+    }
+
+    if (bio !== undefined) {
+      updateData.bio = bio.trim();
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      {
-        fullName,
-        username,
-        bio,
-      },
+      updateData,
       {
         new: true,
         runValidators: true,
       }
     ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
