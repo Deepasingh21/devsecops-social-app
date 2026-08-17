@@ -9,26 +9,76 @@ import { createPost } from "../../services/postService";
 function CreatePost({ onPostCreated }) {
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
 
   const fileInputRef = useRef(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (!image) {
-      setPreviewUrl("");
+    if (!image || !image.type.startsWith("image/")) {
+      const canvas = canvasRef.current;
+
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
       return;
     }
 
-    if (!image.type.startsWith("image/")) {
-      setPreviewUrl("");
-      return;
-    }
+    let cancelled = false;
+    let bitmap = null;
 
-    const objectUrl = URL.createObjectURL(image);
-    setPreviewUrl(objectUrl);
+    const drawImagePreview = async () => {
+      try {
+        bitmap = await createImageBitmap(image);
+
+        if (cancelled) {
+          bitmap.close();
+          return;
+        }
+
+        const canvas = canvasRef.current;
+
+        if (!canvas) {
+          bitmap.close();
+          return;
+        }
+
+        const maxWidth = 192;
+        const maxHeight = 192;
+
+        const scale = Math.min(
+          maxWidth / bitmap.width,
+          maxHeight / bitmap.height,
+          1
+        );
+
+        const width = Math.round(bitmap.width * scale);
+        const height = Math.round(bitmap.height * scale);
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext("2d");
+
+        context.clearRect(0, 0, width, height);
+        context.drawImage(bitmap, 0, 0, width, height);
+
+        bitmap.close();
+        bitmap = null;
+      } catch (error) {
+        console.error("Unable to preview image:", error);
+      }
+    };
+
+    drawImagePreview();
 
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      cancelled = true;
+
+      if (bitmap) {
+        bitmap.close();
+      }
     };
   }, [image]);
 
@@ -104,12 +154,12 @@ function CreatePost({ onPostCreated }) {
             }}
           />
 
-          {previewUrl && (
+          {image && (
             <div className="mt-4">
-              <img
-                src={previewUrl}
-                alt="Preview"
+              <canvas
+                ref={canvasRef}
                 className="w-48 rounded-lg border"
+                aria-label="Selected image preview"
               />
             </div>
           )}
@@ -118,7 +168,7 @@ function CreatePost({ onPostCreated }) {
             <div className="space-x-4 text-gray-600">
               <button
                 type="button"
-                onClick={() => fileInputRef.current.click()}
+                onClick={() => fileInputRef.current?.click()}
               >
                 📷 Photo
               </button>
