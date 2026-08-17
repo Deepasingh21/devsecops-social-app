@@ -24,6 +24,17 @@ const authLimiter = rateLimit({
   },
 });
 
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests. Please try again later.",
+  },
+});
+
 app.use(
   helmet({
     crossOriginResourcePolicy: {
@@ -53,10 +64,11 @@ app.use(
 );
 
 app.use("/api/auth", authLimiter, authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/posts", postRoutes);
+app.use("/api/users", apiLimiter, userRoutes);
+app.use("/api/posts", apiLimiter, postRoutes);
 app.use(
   "/api/notifications",
+  apiLimiter,
   notificationRoutes
 );
 app.get("/", (req, res) => {
