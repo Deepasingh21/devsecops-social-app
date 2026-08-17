@@ -1,10 +1,20 @@
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const path = require("path");
 const Notification = require("../models/Notification");
 
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const userId = req.user?.id;
+
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -28,9 +38,17 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { fullName, username, bio } = req.body;
+    const userId = req.user?.id;
+
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
 
     const user = await User.findByIdAndUpdate(
-      req.user.id,
+      userId,
       {
         fullName,
         username,

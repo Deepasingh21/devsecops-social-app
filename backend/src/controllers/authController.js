@@ -7,9 +7,27 @@ exports.register = async (req, res) => {
   try {
     const { fullName, username, email, password } = req.body;
 
+    if (
+      typeof fullName !== "string" ||
+      typeof username !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid registration data",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedUsername = username.trim();
+
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
+      $or: [
+        { email: { $eq: normalizedEmail } },
+        { username: { $eq: normalizedUsername } },
+      ],
     });
 
     if (existingUser) {
@@ -23,9 +41,9 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      fullName,
-      username,
-      email,
+      fullName: fullName.trim(),
+      username: normalizedUsername,
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -53,8 +71,22 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email: { $eq: normalizedEmail },
+    });
 
     if (!user) {
       return res.status(400).json({
