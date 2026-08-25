@@ -34,8 +34,11 @@ coverage/
 
 # Docker
 docker-data/
+.env.docker
 
 # Python
 venv/
 __pycache__/
 *.pyc
+
+
