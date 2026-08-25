@@ -11,7 +11,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY src ./src
 COPY server.js ./
 
-RUN mkdir -p uploads
+RUN mkdir -p uploads && chown -R node:node /app
 
 EXPOSE 5000
 
