@@ -1,0 +1,37 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devsecops-backend
+    env_file:
+      - ./backend/.env.docker
+    ports:
+      - "5000:5000"
+    networks:
+      - devsecops-network
+    volumes:
+      - devsecops-uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devsecops-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - devsecops-network
+    restart: unless-stopped
+
+networks:
+  devsecops-network:
+    external: true
+
+volumes:
+  devsecops-uploads:
+    external: true
