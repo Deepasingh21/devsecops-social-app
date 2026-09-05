@@ -94,8 +94,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create temporary environment file for CI
-        run: touch backend/.env.docker
+      - name: Create temporary environment files for CI
+        run: |
+          touch backend/.env.docker
+          touch monitoring/grafana/.env
 
       - name: Validate Docker Compose configuration
         run: docker compose config
