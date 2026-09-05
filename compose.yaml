@@ -55,7 +55,7 @@ services:
 
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.14.0
 
     container_name: devsecops-prometheus
 
@@ -73,7 +73,7 @@ services:
 
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.12.1
 
     container_name: devsecops-node-exporter
 
@@ -85,13 +85,17 @@ services:
 
     restart: unless-stopped
 
+
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2.0
 
     container_name: devsecops-grafana
 
     ports:
       - "3000:3000"
+
+    env_file:
+      - ./monitoring/grafana/.env
 
     volumes:
       - grafana-data:/var/lib/grafana

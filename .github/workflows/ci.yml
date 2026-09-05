@@ -10,6 +10,7 @@ on:
       - main
 
 jobs:
+
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
@@ -62,22 +63,62 @@ jobs:
         run: npm run build
 
 
-  docker:
-    name: Docker Build Validation
+  trivy-filesystem:
+    name: Trivy Filesystem Scan
     runs-on: ubuntu-latest
-    needs:
-      - backend
-      - frontend
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Create temporary environment file for CI
-        run: touch backend/.env.docker
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+
+  docker:
+    name: Docker Build and Security Scan
+    runs-on: ubuntu-latest
+
+    needs:
+      - backend
+      - frontend
+      - trivy-filesystem
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Create temporary environment files for CI
+        run: |
+          touch backend/.env.docker
+          touch monitoring/grafana/.env
 
       - name: Validate Docker Compose configuration
         run: docker compose config
 
       - name: Build Docker images
         run: docker compose build
+
+      - name: Scan backend Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: devsecops-social-app-backend:latest
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Scan frontend Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: devsecops-social-app-frontend:latest
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

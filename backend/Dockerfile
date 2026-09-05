@@ -1,20 +1,39 @@
+# Stage 1: Build production dependencies
+FROM node:22-bookworm-slim AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci --omit=dev
+
+COPY src ./src
+COPY server.js ./
+
+
+# Stage 2: Production runtime
 FROM node:22-bookworm-slim
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
+# Update Debian packages to the latest security fixes
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    # Remove npm and bundled package managers from production image
+    && rm -rf /usr/local/lib/node_modules/npm \
+              /usr/local/lib/node_modules/corepack \
+              /opt/yarn-v1.22.22
 
-RUN npm ci --omit=dev && npm cache clean --force
-
-COPY src ./src
-COPY server.js ./
-
-RUN mkdir -p uploads && chown -R node:node /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/server.js ./
 
 EXPOSE 5000
 
 USER node
 
-CMD ["node", "server.js"]
+CMD ["server.js"]
