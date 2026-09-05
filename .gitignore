@@ -42,3 +42,10 @@ __pycache__/
 *.pyc
 
 
+
+# Security scan reports
+security-reports/
+backend-trivy-*.json
+backend-trivy-report.txt
+grafana-trivy.json
+backend-trivy.json
