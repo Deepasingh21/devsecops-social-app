@@ -44,6 +44,7 @@ jobs:
               "curl -f http://localhost:8080",
               "curl -f http://localhost:9090/-/healthy",
               "curl -f http://localhost:3000/api/health",
+              "curl -f http://localhost:9093/-/healthy",
               "echo Deployment successful"
             ]' \
             --query 'Command.CommandId' \
