@@ -49,3 +49,6 @@ backend-trivy-*.json
 backend-trivy-report.txt
 grafana-trivy.json
 backend-trivy.json
+monitoring/alertmanager/.env
+monitoring/alertmanager/alertmanager.yml
+monitoring/alertmanager/.env
