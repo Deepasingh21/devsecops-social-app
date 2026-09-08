@@ -98,11 +98,14 @@ jobs:
         run: |
           touch backend/.env.docker
           touch monitoring/grafana/.env
+
+          mkdir -p monitoring/alertmanager
+
           cat > monitoring/alertmanager/.env <<'EOF'
           ALERT_EMAIL_FROM=test@example.com
           ALERT_EMAIL_TO=test@example.com
           ALERT_EMAIL_PASSWORD=test-password
-          EOF
+          EOF         
 
       - name: Validate Docker Compose configuration
         run: docker compose config
