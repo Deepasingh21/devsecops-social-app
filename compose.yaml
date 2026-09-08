@@ -85,6 +85,7 @@ services:
 
     volumes:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./monitoring/alertmanager/secrets/smtp_password:/etc/alertmanager/secrets/smtp_password:ro
       - alertmanager-data:/alertmanager
 
     command:
