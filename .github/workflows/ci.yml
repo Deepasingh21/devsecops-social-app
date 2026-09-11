@@ -72,7 +72,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -95,17 +95,21 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Create temporary environment files for CI
+        env:
+          ALERT_EMAIL_FROM: test@example.com
+          ALERT_EMAIL_TO: test@example.com
+          ALERT_EMAIL_PASSWORD: ci-test-password
         run: |
           touch backend/.env.docker
           touch monitoring/grafana/.env
 
           mkdir -p monitoring/alertmanager
 
-          cat > monitoring/alertmanager/.env <<'EOF'
-          ALERT_EMAIL_FROM=test@example.com
-          ALERT_EMAIL_TO=test@example.com
-          ALERT_EMAIL_PASSWORD=test-password
-          EOF         
+          cat > monitoring/alertmanager/.env <<EOF
+          ALERT_EMAIL_FROM=$ALERT_EMAIL_FROM
+          ALERT_EMAIL_TO=$ALERT_EMAIL_TO
+          ALERT_EMAIL_PASSWORD=$ALERT_EMAIL_PASSWORD
+          EOF
 
       - name: Validate Docker Compose configuration
         run: docker compose config
@@ -114,7 +118,7 @@ jobs:
         run: docker compose build
 
       - name: Scan backend Docker image with Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: devsecops-social-app-backend:latest
           format: table
@@ -123,7 +127,7 @@ jobs:
           exit-code: "1"
 
       - name: Scan frontend Docker image with Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: devsecops-social-app-frontend:latest
           format: table
