@@ -1,3 +1,4 @@
+const { sendFollowEmail } = require("../services/emailService");
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const path = require("path");
@@ -179,6 +180,21 @@ const followUser = async (req, res) => {
       type: "follow",
       message: `${currentUser.fullName} started following you`,
     });
+
+
+// Send email notification
+
+try {
+  await sendFollowEmail({
+    recipientEmail: targetUser.email,
+    recipientName: targetUser.fullName,
+    senderName: currentUser.fullName,
+  });
+
+  console.log("FOLLOW EMAIL SENT SUCCESSFULLY");
+} catch (emailError) {
+  console.error("FOLLOW EMAIL FAILED:", emailError.message);
+}
 
     res.status(200).json({
       success: true,

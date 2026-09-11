@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const User = require("../models/User");
+const { sendPasswordResetEmail } = require("../services/emailService");
 
 // Register User
 exports.register = async (req, res) => {
@@ -174,7 +175,17 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // Development only
-    console.log("Password reset token:", resetToken);
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+try {
+  await sendPasswordResetEmail({
+    recipientEmail: user.email,
+    recipientName: user.name || "User",
+    resetUrl,
+  });
+} catch (emailError) {
+  console.error("Password reset email failed:", emailError.message);
+}
 
     res.status(200).json({
       success: true,
