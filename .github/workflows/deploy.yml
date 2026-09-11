@@ -36,6 +36,7 @@ jobs:
               "cd /home/ubuntu/devsecops-social-app",
               "sudo -u ubuntu git -C /home/ubuntu/devsecops-social-app checkout main",
               "sudo -u ubuntu git -C /home/ubuntu/devsecops-social-app pull origin main",
+              "sudo /home/ubuntu/devsecops-social-app/scripts/load-production-secrets.sh",
               "docker compose build",
               "docker compose up -d",
               "echo Waiting for containers...",
