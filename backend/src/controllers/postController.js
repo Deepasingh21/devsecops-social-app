@@ -1,6 +1,11 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const {
+  sendLikeEmail,
+  sendCommentEmail,
+  sendPostEmail,
+} = require("../services/emailService");
 
 // Create Post
 const createPost = async (req, res) => {
@@ -19,13 +24,39 @@ const createPost = async (req, res) => {
       image,
     });
 
+    const currentUser = await User.findById(req.user.id);
+
+    if (currentUser && currentUser.followers?.length > 0) {
+      const followers = await User.find({
+        _id: { $in: currentUser.followers },
+      }).select("email fullName");
+
+      for (const follower of followers) {
+        if (!follower.email) continue;
+
+        try {
+          await sendPostEmail({
+            recipientEmail: follower.email,
+            recipientName: follower.fullName,
+            senderName: currentUser.fullName,
+            postContent: content,
+          });
+
+          console.log("POST EMAIL SENT SUCCESSFULLY");
+        } catch (emailError) {
+          console.error("POST EMAIL FAILED:", emailError.message);
+        }
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: "Post created successfully",
       post,
     });
-
   } catch (error) {
+    console.error("Create post error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -137,15 +168,31 @@ const likePost = async (req, res) => {
           });
 
         if (!existingNotification) {
-          await Notification.create({
-            recipient: post.author,
-            sender: userId,
-            type: "like",
-            post: post._id,
-            message: `${currentUser.fullName} liked your post`,
-            isRead: false,
-          });
-        }
+  await Notification.create({
+    recipient: post.author,
+    sender: userId,
+    type: "like",
+    post: post._id,
+    message: `${currentUser.fullName} liked your post`,
+    isRead: false,
+  });
+
+  const postOwner = await User.findById(post.author);
+
+  if (postOwner?.email) {
+    try {
+      await sendLikeEmail({
+        recipientEmail: postOwner.email,
+        recipientName: postOwner.fullName,
+        senderName: currentUser.fullName,
+      });
+
+      console.log("LIKE EMAIL SENT SUCCESSFULLY");
+    } catch (emailError) {
+      console.error("LIKE EMAIL FAILED:", emailError.message);
+    }
+  }
+}
       }
     }
 
@@ -196,13 +243,32 @@ const addComment = async (req, res) => {
     if (post.author.toString() !== req.user.id) {
   const currentUser = await User.findById(req.user.id);
 
-  await Notification.create({
-    recipient: post.author,
-    sender: req.user.id,
-    type: "comment",
-    post: post._id,
-    message: `${currentUser.fullName} commented on your post`,
-  });
+  if (currentUser) {
+    await Notification.create({
+      recipient: post.author,
+      sender: req.user.id,
+      type: "comment",
+      post: post._id,
+      message: `${currentUser.fullName} commented on your post`,
+    });
+
+    const postOwner = await User.findById(post.author);
+
+    if (postOwner?.email) {
+      try {
+        await sendCommentEmail({
+          recipientEmail: postOwner.email,
+          recipientName: postOwner.fullName,
+          senderName: currentUser.fullName,
+          commentText: text,
+        });
+
+        console.log("COMMENT EMAIL SENT SUCCESSFULLY");
+      } catch (emailError) {
+        console.error("COMMENT EMAIL FAILED:", emailError.message);
+      }
+    }
+  }
 }
 
     res.status(201).json({
