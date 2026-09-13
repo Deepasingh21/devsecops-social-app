@@ -32,21 +32,7 @@ jobs:
             --document-name AWS-RunShellScript \
             --comment "GitHub Actions deployment" \
             --parameters 'commands=[
-              "set -e",
-              "cd /home/ubuntu/devsecops-social-app",
-              "sudo -u ubuntu git -C /home/ubuntu/devsecops-social-app checkout main",
-              "sudo -u ubuntu git -C /home/ubuntu/devsecops-social-app pull origin main",
-              "sudo /home/ubuntu/devsecops-social-app/scripts/load-production-secrets.sh",
-              "docker compose build",
-              "docker compose up -d",
-              "echo Waiting for containers...",
-              "sleep 10",
-              "docker compose ps",
-              "curl -f http://localhost:8080",
-              "curl -f http://localhost:9090/-/healthy",
-              "curl -f http://localhost:3000/api/health",
-              "curl -f http://localhost:9093/-/healthy",
-              "echo Deployment successful"
+              "sudo /home/ubuntu/devsecops-social-app/scripts/deploy-with-rollback.sh"
             ]' \
             --query 'Command.CommandId' \
             --output text)
