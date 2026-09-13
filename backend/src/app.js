@@ -79,7 +79,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     service: "devsecops-backend",
-    version: "B",
+    version: "C",
   });
 });
 
