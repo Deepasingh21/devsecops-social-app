@@ -8,13 +8,20 @@ TEST_ROLLBACK="${1:-false}"
 cd "$APP_DIR"
 
 PREVIOUS_COMMIT="$(sudo -u ubuntu git -C "$APP_DIR" rev-parse HEAD)"
-echo "Previous commit: $PREVIOUS_COMMIT"
+echo "Previous commit before deployment: $PREVIOUS_COMMIT"
 
 sudo -u ubuntu git -C "$APP_DIR" checkout main
 
 if ! sudo -u ubuntu git -C "$APP_DIR" pull origin main; then
     echo "Git pull failed"
     exit 1
+fi
+
+if [ "$TEST_ROLLBACK" = "true" ]; then
+    ROLLBACK_TARGET="$(sudo -u ubuntu git -C "$APP_DIR" rev-parse HEAD^)"
+    echo "CONTROLLED ROLLBACK TEST target: $ROLLBACK_TARGET"
+else
+    ROLLBACK_TARGET="$PREVIOUS_COMMIT"
 fi
 
 echo "Loading production secrets..."
@@ -63,8 +70,9 @@ fi
 
 if [ "$FAILED" = "1" ]; then
     echo "Deployment failed - starting rollback"
+    echo "Rolling back to: $ROLLBACK_TARGET"
 
-    sudo -u ubuntu git -C "$APP_DIR" checkout "$PREVIOUS_COMMIT"
+    sudo -u ubuntu git -C "$APP_DIR" checkout "$ROLLBACK_TARGET"
 
     sudo "$APP_DIR/scripts/load-production-secrets.sh"
 
