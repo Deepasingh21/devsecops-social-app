@@ -3,6 +3,8 @@ set -uo pipefail
 
 APP_DIR="/home/ubuntu/devsecops-social-app"
 
+TEST_ROLLBACK="${1:-false}"
+
 cd "$APP_DIR"
 
 PREVIOUS_COMMIT="$(sudo -u ubuntu git -C "$APP_DIR" rev-parse HEAD)"
@@ -52,6 +54,11 @@ fi
 
 if [ "$FAILED" != "1" ]; then
     curl -f http://localhost:9093/-/healthy || FAILED=1
+fi
+
+if [ "$TEST_ROLLBACK" = "true" ] && [ "$FAILED" = "0" ]; then
+    echo "CONTROLLED ROLLBACK TEST: intentionally triggering rollback"
+    FAILED=1
 fi
 
 if [ "$FAILED" = "1" ]; then
