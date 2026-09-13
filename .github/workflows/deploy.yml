@@ -5,6 +5,14 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+    inputs:
+      rollback_test:
+        description: "Run controlled rollback test"
+        required: true
+        default: false
+        type: boolean
+
 permissions:
   id-token: write
   contents: read
@@ -32,7 +40,7 @@ jobs:
             --document-name AWS-RunShellScript \
             --comment "GitHub Actions deployment" \
             --parameters 'commands=[
-              "sudo /home/ubuntu/devsecops-social-app/scripts/deploy-with-rollback.sh"
+              "sudo /home/ubuntu/devsecops-social-app/scripts/deploy-with-rollback.sh ${{ inputs.rollback_test }}"
             ]' \
             --query 'Command.CommandId' \
             --output text)
