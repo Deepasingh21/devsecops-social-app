@@ -13,6 +13,10 @@ on:
         default: false
         type: boolean
 
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
 permissions:
   id-token: write
   contents: read
@@ -21,6 +25,9 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
+
+    environment:
+      name: production
 
     steps:
       - name: Checkout repository
