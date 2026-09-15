@@ -104,6 +104,7 @@ jobs:
       - backend
       - frontend
       - trivy-filesystem
+      - gitleaks
 
     steps:
       - name: Checkout code
