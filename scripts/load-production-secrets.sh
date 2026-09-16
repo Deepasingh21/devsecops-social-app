@@ -4,19 +4,34 @@ set -euo pipefail
 SECRET_ID="devsecops/social-app/production"
 ENV_FILE="/home/ubuntu/devsecops-social-app/backend/.env.docker"
 
-SECRET_STRING="$(aws secretsmanager get-secret-value \
-  --secret-id "$SECRET_ID" \
-  --region ap-south-1 \
-  --query 'SecretString' \
-  --output text)"
-
-python3 - "$SECRET_STRING" "$ENV_FILE" <<'PY'
+python3 - "$ENV_FILE" <<'PY'
 import json
+import subprocess
 import sys
+import os
 
-secret_string = sys.argv[1]
-env_file = sys.argv[2]
+env_file = sys.argv[1]
 
+result = subprocess.run(
+    [
+        "aws",
+        "secretsmanager",
+        "get-secret-value",
+        "--secret-id",
+        "devsecops/social-app/production",
+        "--region",
+        "ap-south-1",
+        "--query",
+        "SecretString",
+        "--output",
+        "text",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+
+secret_string = result.stdout
 data = json.loads(secret_string)
 
 required = {
@@ -38,11 +53,13 @@ if missing:
         f"Missing required secrets: {', '.join(sorted(missing))}"
     )
 
+os.makedirs(os.path.dirname(env_file), exist_ok=True)
+
 with open(env_file, "w") as f:
     for key, value in data.items():
         f.write(f"{key}={value}\n")
+
+os.chmod(env_file, 0o600)
+
+print("Production secrets loaded successfully.")
 PY
-
-chmod 600 "$ENV_FILE"
-
-echo "Production secrets loaded successfully."
